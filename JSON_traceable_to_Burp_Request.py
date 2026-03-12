@@ -35,12 +35,21 @@ class BurpExtender(IBurpExtender, ITab):
         # default checked
         self.sendRepeater = JCheckBox("Send to Repeater", True)
 
+        # ===== NEW CHECKBOXES =====
+        self.useForwardedPrefix = JCheckBox("Use x-forwarded-prefix", False)
+        self.useForwardedPath = JCheckBox("Use x-forwarded-path", False)
+
         startButton = JButton("Start", actionPerformed=self.convert)
 
         topPanel = JPanel()
         topPanel.add(JLabel("Method:"))
         topPanel.add(self.methodBox)
         topPanel.add(self.sendRepeater)
+
+        # add new options
+        topPanel.add(self.useForwardedPrefix)
+        topPanel.add(self.useForwardedPath)
+
         topPanel.add(startButton)
 
         self.panel.add(topPanel, BorderLayout.NORTH)
@@ -92,6 +101,27 @@ class BurpExtender(IBurpExtender, ITab):
 
             if query:
                 path = path + "?" + query
+
+            # ===== forwarded prefix/path logic =====
+
+            if self.useForwardedPath.isSelected():
+
+                forwardedPath = headers.get("x-forwarded-path")
+
+                if forwardedPath:
+                    forwardedPath = forwardedPath.replace("\n", "").replace("\r", "")
+                    path = forwardedPath
+                    if query:
+                        path = path + "?" + query
+
+            elif self.useForwardedPrefix.isSelected():
+
+                prefix = headers.get("x-forwarded-prefix")
+
+                if prefix:
+                    prefix = prefix.replace("\n", "").replace("\r", "")
+                    if not path.startswith(prefix):
+                        path = prefix + path
 
             # ===== method =====
 
