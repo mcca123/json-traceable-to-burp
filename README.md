@@ -26,6 +26,7 @@ Supported JSON Format
 
 The extension expects JSON input similar to the following format:
 
+```
 {
   "uri": "https://example.com/api/search",
   "queryParams": {
@@ -39,16 +40,19 @@ The extension expects JSON input similar to the following format:
   "cookies": {},
   "body": "testA=1"
 }
+```
 
 Example Output
 --------------
 
+```
 GET /api/search?key=test&page=1 HTTP/1.1
 Host: example.com
 authorization: Bearer token
 accept: */*
 
 testA=1
+```
 
 Installation
 ------------
