@@ -36,8 +36,8 @@ class BurpExtender(IBurpExtender, ITab):
         self.sendRepeater = JCheckBox("Send to Repeater", True)
 
         # ===== NEW CHECKBOXES =====
-        self.useForwardedPrefix = JCheckBox("Use x-forwarded-prefix", False)
-        self.useForwardedPath = JCheckBox("Use x-forwarded-path", False)
+        self.useForwardedPrefix = JCheckBox("Use x-forwarded-prefix", True)
+        self.useForwardedPath = JCheckBox("Use x-forwarded-path", True)
 
         startButton = JButton("Start", actionPerformed=self.convert)
 
