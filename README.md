@@ -1,4 +1,4 @@
-JSON to Burp Request Converter
+JSON to Burp Request Converter (Burp Suite extension)
 ==============================
 
 This Burp Suite extension converts JSON-formatted HTTP request data into
