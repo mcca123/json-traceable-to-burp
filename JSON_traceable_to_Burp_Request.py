@@ -20,7 +20,7 @@ class BurpExtender(IBurpExtender, ITab):
         self.callbacks = callbacks
         self.helpers = callbacks.getHelpers()
 
-        callbacks.setExtensionName("JSON traceable to Burp Request")
+        callbacks.setExtensionName("JSON → Burp Request")
 
         # ===== UI =====
 
@@ -32,7 +32,7 @@ class BurpExtender(IBurpExtender, ITab):
 
         self.methodBox = JComboBox(["AUTO", "GET", "POST"])
 
-        # default = checked
+        # default checked
         self.sendRepeater = JCheckBox("Send to Repeater", True)
 
         startButton = JButton("Start", actionPerformed=self.convert)
@@ -73,7 +73,11 @@ class BurpExtender(IBurpExtender, ITab):
             host = parsed.netloc
             path = parsed.path
 
-            # ===== Query handling =====
+            # ===== sanitize path =====
+
+            path = path.strip().replace("\n", "").replace("\r", "")
+
+            # ===== query handling =====
 
             query = parsed.query
 
@@ -89,38 +93,51 @@ class BurpExtender(IBurpExtender, ITab):
             if query:
                 path = path + "?" + query
 
-            # ===== Method detection =====
+            # ===== method =====
 
             method = str(self.methodBox.getSelectedItem())
 
             if method == "AUTO":
                 method = "POST" if body else "GET"
 
-            # ===== Build request =====
+            # ===== headers =====
 
-            request = method + " " + path + " HTTP/1.1\n"
-            request += "Host: " + host + "\n"
+            headerList = []
+
+            headerList.append(method + " " + path + " HTTP/1.1")
+            headerList.append("Host: " + host)
 
             for k, v in headers.items():
 
-                if k.lower() != "host":
-                    request += k + ": " + str(v) + "\n"
+                if k.lower() == "host":
+                    continue
 
-            request += "\n"
+                value = str(v).replace("\n", "").replace("\r", "")
 
-            # ===== Body handling =====
+                headerList.append(k + ": " + value)
+
+            # ===== body handling =====
+
+            bodyBytes = None
 
             if body:
 
                 if isinstance(body, dict):
-
                     body = json.dumps(body)
 
-                request += body
+                body = body.replace("\r\n", "\n")
 
-            self.outputArea.setText(request)
+                bodyBytes = body.encode()
 
-            # ===== Send to Repeater =====
+            # ===== build request safely =====
+
+            requestBytes = self.helpers.buildHttpMessage(headerList, bodyBytes)
+
+            # ===== show output =====
+
+            self.outputArea.setText(self.helpers.bytesToString(requestBytes))
+
+            # ===== send to repeater =====
 
             if self.sendRepeater.isSelected():
 
@@ -129,15 +146,15 @@ class BurpExtender(IBurpExtender, ITab):
 
                 if ":" in host:
 
-                    hostParts = host.split(":")
-                    host = hostParts[0]
-                    port = int(hostParts[1])
+                    parts = host.split(":")
+                    host = parts[0]
+                    port = int(parts[1])
 
                 self.callbacks.sendToRepeater(
                     host,
                     port,
                     https,
-                    request.encode(),
+                    requestBytes,
                     None
                 )
 
