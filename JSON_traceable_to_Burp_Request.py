@@ -20,7 +20,7 @@ class BurpExtender(IBurpExtender, ITab):
         self.callbacks = callbacks
         self.helpers = callbacks.getHelpers()
 
-        callbacks.setExtensionName("JSON → Burp Request")
+        callbacks.setExtensionName("JSON to Burp Request")
 
         # ===== UI =====
 
