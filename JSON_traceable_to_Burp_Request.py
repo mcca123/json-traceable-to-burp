@@ -20,7 +20,7 @@ class BurpExtender(IBurpExtender, ITab):
         self.callbacks = callbacks
         self.helpers = callbacks.getHelpers()
 
-        callbacks.setExtensionName("JSON to Burp Request")
+        callbacks.setExtensionName("JSON traceable to Burp Request")
 
         # ===== UI =====
 
@@ -59,7 +59,7 @@ class BurpExtender(IBurpExtender, ITab):
         callbacks.addSuiteTab(self)
 
     def getTabCaption(self):
-        return "JSON Request"
+        return "Traceable"
 
     def getUiComponent(self):
         return self.panel
@@ -76,6 +76,7 @@ class BurpExtender(IBurpExtender, ITab):
             headers = data.get("headers", {})
             body = data.get("body")
             queryParams = data.get("queryParams")
+            cookies = data.get("cookies", {})   # ✅ NEW
 
             parsed = urlparse(uri)
 
@@ -139,12 +140,28 @@ class BurpExtender(IBurpExtender, ITab):
 
             for k, v in headers.items():
 
-                if k.lower() == "host":
+                # skip host & cookie (เราจะจัดการ cookie เอง)
+                if k.lower() in ["host", "cookie"]:
                     continue
 
                 value = str(v).replace("\n", "").replace("\r", "")
 
                 headerList.append(k + ": " + value)
+
+            # ===== cookies handling =====
+
+            if cookies:
+
+                cookiePairs = []
+
+                for ck, cv in cookies.items():
+                    name = str(ck).replace("\n", "").replace("\r", "")
+                    value = str(cv).replace("\n", "").replace("\r", "")
+                    cookiePairs.append(name + "=" + value)
+
+                cookieHeader = "Cookie: " + "; ".join(cookiePairs)
+
+                headerList.append(cookieHeader)
 
             # ===== body handling =====
 
